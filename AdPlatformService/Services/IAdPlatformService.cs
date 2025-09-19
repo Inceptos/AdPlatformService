@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 
-namespace AdPlatformService.Services
+namespace AdPlatform.Services
 {
     public interface IAdPlatformService
     {

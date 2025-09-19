@@ -1,45 +1,75 @@
-﻿
-using System.Text;
+﻿using AdPlatform.Models;
 
-namespace AdPlatformService.Services
+namespace AdPlatform.Services
 {
-    public record AdPlatform(string Name, List<string> Locations);
     public class AdPlatformService : IAdPlatformService
     {
-        private readonly List<AdPlatform> _ads = new();
-        
-        public List<string> FindAdPlatforms(string location)
-        {
-            var platforms = new List<string>();
-            do
-            {
-                var lastIndex = location.LastIndexOf('/');
-                platforms.AddRange(_ads.Where(x => x.Locations.Contains(location)).Select(x => x.Name));
-                location = location.Remove(lastIndex, location.Length - lastIndex);
-            }
-            while (location.LastIndexOf('/') >= 0);
-            return platforms;
-        }
+        private LocationNode root = new LocationNode();
 
         public int LoadFromFile(IFormFile file)
         {
-            _ads.Clear();
-            using (var reader = new StreamReader(file.OpenReadStream(), Encoding.UTF8))
+            root = new LocationNode();
+
+            using var stream = file.OpenReadStream();
+            using var reader = new StreamReader(stream);
+
+            var uniquePlatforms = new HashSet<string>();
+
+            while (!reader.EndOfStream)
             {
-                string line;
+                var line = reader.ReadLine();
+                
+                if (string.IsNullOrWhiteSpace(line)) continue;
 
-                while ((line = reader.ReadLine()) != null)
+                var parts = line.Split( ':' , 2);
+                if (parts.Length < 2) continue;
+
+                var platform = parts[0].Trim();
+                var locationsString = parts[1];
+                var locations = locationsString.Split(',');
+
+                foreach (var loc in locations)
                 {
-                    var splitLine = line.Split(':');
-                    var namePlatform = splitLine[0].Trim();
-                    var locations = splitLine[1].Split(',')
-                        .Select(x => x.Trim()).ToList();
-
-                    _ads.Add(new AdPlatform(namePlatform, locations));
+                    AddPlatformToLocation(loc.Trim(), platform);
                 }
+
+                uniquePlatforms.Add(platform);
             }
 
-            return _ads.Count;
+            return uniquePlatforms.Count;            
+        }
+
+        private void AddPlatformToLocation(string location, string platform)
+        {
+            var segments = location.Split('/');
+            var current = root;
+
+            foreach (var seg in segments)
+            {
+                if (!current.Children.ContainsKey(seg))
+                    current.Children[seg] = new LocationNode();
+
+                current = current.Children[seg];
+            }
+            current.AdvertisingPlatforms.Add(platform);
+        }
+
+        public List<string> FindAdPlatforms(string location)
+        {
+            var segments = location.Split('/');
+            var current = root;
+            var result = new HashSet<string>();
+
+            result.UnionWith(current.AdvertisingPlatforms);
+            foreach (var seg in segments)
+            {
+                if (!current.Children.ContainsKey(seg))
+                    break;
+                current = current.Children[seg];
+                result.UnionWith(current.AdvertisingPlatforms);
+            }
+
+            return result.ToList();
         }
     }
 }

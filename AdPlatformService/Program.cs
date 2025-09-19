@@ -1,4 +1,4 @@
-using AdPlatformService.Services;
+using AdPlatform.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,7 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
-builder.Services.AddSingleton<IAdPlatformService, AdPlatformService.Services.AdPlatformService>();
+builder.Services.AddSingleton<IAdPlatformService, AdPlatformService>();
 
 var app = builder.Build();
 

@@ -1,8 +1,8 @@
-﻿namespace AdPlatformService.Models
+﻿namespace AdPlatform.Models
 {
-    public class LocationNode
+    class LocationNode
     {
-        public HashSet<string> AdPlatforms { get; set; } = new();
-        public Dictionary<string, LocationNode> Children { get; set; } = new();
+        public Dictionary<string, LocationNode> Children = new Dictionary<string, LocationNode>();
+        public HashSet<string> AdvertisingPlatforms = new HashSet<string>();
     }
 }
